@@ -20,5 +20,14 @@ namespace MassTransit.AmazonSqsTransport.Contexts
             throw new AmazonSqsTransportException(
                 $"Received unsuccessful response ({statusCode}) from AWS endpoint. See AWS SDK logs ({requestId}) for more details: {documentationUri}");
         }
+
+        public static bool DoesQueueExists(this AmazonWebServiceResponse response)
+        {
+            var statusCode = response.HttpStatusCode;
+            var requestId = response.ResponseMetadata.RequestId;
+
+            return (statusCode >= HttpStatusCode.OK && statusCode < HttpStatusCode.MultipleChoices);
+
+        }
     }
 }

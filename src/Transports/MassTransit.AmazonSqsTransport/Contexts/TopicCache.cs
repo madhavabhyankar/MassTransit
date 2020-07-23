@@ -68,12 +68,20 @@ namespace MassTransit.AmazonSqsTransport.Contexts
                     Value = x.Value
                 }).ToList()
             };
-
+            var topicArn = string.Empty;
+            var doesTopicExistResponse = await _client.GetTopicAttributesAsync(topic.EntityName).ConfigureAwait(false);
+            if (doesTopicExistResponse.DoesQueueExists())
+            {
+                topicArn = doesTopicExistResponse.Attributes
+                    .First(t=>
+                    t.Key.Equals("TopicArn",System.StringComparison.InvariantCultureIgnoreCase))
+                    .Value;
+            }
             var response = await _client.CreateTopicAsync(request, cancellationToken).ConfigureAwait(false);
 
             response.EnsureSuccessfulResponse();
 
-            var topicArn = response.TopicArn;
+            topicArn = response.TopicArn;
 
             var attributesResponse = await _client.GetTopicAttributesAsync(topicArn, cancellationToken).ConfigureAwait(false);
 

@@ -95,11 +95,21 @@ namespace MassTransit.AmazonSqsTransport.Contexts
                 Tags = queue.QueueTags.ToDictionary(x => x.Key, x => x.Value)
             };
 
-            var response = await _client.CreateQueueAsync(request, cancellationToken).ConfigureAwait(false);
+            var queueExistsResponse = await _client.GetQueueUrlAsync(queue.EntityName);
+            var queueUrl = string.Empty;
+            if (!queueExistsResponse.DoesQueueExists())
+            {
 
-            response.EnsureSuccessfulResponse();
+                var response = await _client.CreateQueueAsync(request, cancellationToken).ConfigureAwait(false);
 
-            var queueUrl = response.QueueUrl;
+                response.EnsureSuccessfulResponse();
+
+                queueUrl = response.QueueUrl;
+            }
+            else
+            {
+                queueUrl = queueExistsResponse.QueueUrl;
+            }
 
             Dictionary<string, string> queueAttributes = await _client.GetAttributesAsync(queueUrl).ConfigureAwait(false);
 
